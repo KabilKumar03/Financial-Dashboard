@@ -1,0 +1,3 @@
+npm install react react-dom recharts
+npm install -D tailwindcss postcss autoprefixer vite
+npx tailwindcss init -p
