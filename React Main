@@ -1,0 +1,79 @@
+import { useState, useEffect } from "react";
+import SummaryCard from "./components/SummaryCard";
+import TransactionTable from "./components/TransactionTable";
+import RoleSwitcher from "./components/RoleSwitcher";
+import Charts from "./components/Charts";
+import Insights from "./components/Insights";
+import AddTransactionModal from "./components/AddTransactionModal";
+
+export default function App() {
+  const [transactions, setTransactions] = useState([]);
+  const [role, setRole] = useState("viewer");
+  const [search, setSearch] = useState("");
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("transactions");
+    if (saved) setTransactions(JSON.parse(saved));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("transactions", JSON.stringify(transactions));
+  }, [transactions]);
+
+  const income = transactions
+    .filter(t => t.type === "income")
+    .reduce((a, t) => a + t.amount, 0);
+
+  const expense = transactions
+    .filter(t => t.type === "expense")
+    .reduce((a, t) => a + t.amount, 0);
+
+  const balance = income - expense;
+
+  const filtered = transactions.filter(t =>
+    t.category?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <div className="flex justify-between">
+        <h1 className="text-2xl font-bold">Finance Dashboard</h1>
+        <RoleSwitcher role={role} setRole={setRole} />
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 mt-4">
+        <SummaryCard title="Balance" value={balance} />
+        <SummaryCard title="Income" value={income} />
+        <SummaryCard title="Expenses" value={expense} />
+      </div>
+
+      <Charts transactions={transactions} />
+
+      <input
+        className="mt-4 p-2 border rounded w-full"
+        placeholder="Search category..."
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {role === "admin" && (
+        <button
+          onClick={() => setShowModal(true)}
+          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          + Add Transaction
+        </button>
+      )}
+
+      <TransactionTable transactions={filtered} />
+      <Insights transactions={transactions} />
+
+      {showModal && (
+        <AddTransactionModal
+          setShowModal={setShowModal}
+          setTransactions={setTransactions}
+        />
+      )}
+    </div>
+  );
+}
